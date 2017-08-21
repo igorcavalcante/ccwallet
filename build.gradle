@@ -4,17 +4,32 @@ version '0.1'
 buildscript {
     ext.kotlin_version = '1.1.4-2'
     ext.ktor_version = '0.4.0'
+    ext.kluent_version = '1.27'
 
     repositories {
         mavenCentral()
+        mavenLocal()
     }
     dependencies {
+        classpath "io.ebean:ebean-gradle-plugin:10.2.2"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0-RC2'
     }
 }
 
 apply plugin: 'kotlin'
+//apply plugin: 'org.junit.platform.gradle.plugin'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'ebean'
 sourceCompatibility = 1.8
+
+/*junitPlatform {
+    filters {
+        engines {
+            include 'spek'
+        }
+    }
+}*/
 
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
@@ -30,12 +45,54 @@ repositories {
     mavenCentral()
     maven { url "https://dl.bintray.com/kotlin/kotlinx" }
     maven { url "https://dl.bintray.com/kotlin/ktor" }
+    maven { url "https://dl.bintray.com/jetbrains/spek" }
+    maven { url "https://dl.bintray.com/markusamshove/maven/" }
 }
 
 dependencies {
+    kapt "io.ebean:kotlin-querybean-generator:10.1.2"
+
+    //  kapt "io.ebean:ebean-querybean:10.3.1"
+    //  kapt "io.ebean:persistence-api:2.2.1"
+
+    //kaptCompile "io.ebean:ebean-querybean:10.2.1"
+    //kaptCompile "io.ebean:persistence-api:2.2.1"
+
+    compile "io.ebean:ebean:10.3.1"
+    compile "io.ebean:ebean-querybean:10.3.1"
+
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile "org.jetbrains.ktor:ktor-core:$ktor_version"
     compile "org.jetbrains.ktor:ktor-netty:$ktor_version"
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile "ch.qos.logback:logback-classic:1.2.1"
+
+/*    testCompile ('org.jetbrains.spek:spek-api:1.1.3') {
+        exclude group: 'org.jetbrains.kotlin'
+    }
+    testRuntime ('org.jetbrains.spek:spek-junit-platform-engine:1.1.3') {
+        exclude group: 'org.junit.platform'
+        exclude group: 'org.jetbrains.kotlin'
+    }*/
+
+    testCompile "org.amshove.kluent:kluent:$kluent_version"
+    testCompile "org.avaje.composite:composite-testing:3.1"
+}
+
+kapt {
+  generateStubs = true
+}
+
+sourceSets {
+  main.kotlin.srcDirs += [file("$buildDir/generated/source/kaptKotlin/main")]
+}
+
+ebean {
+  debugLevel = 9
+  //queryBeans = true
+  //kotlin = true
+}
+
+test {
+  useTestNG()
+  testLogging.showStandardStreams = true
+  testLogging.exceptionFormat = 'full'
 }
