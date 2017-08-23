@@ -1,16 +1,12 @@
 package br.eti.cavalcante.ccwallet.model
 
-import io.ebean.Model
+import javax.persistence.Column
 import javax.persistence.Entity
-import javax.persistence.Id
 
 
 @Entity
-class User(val name: String) : Model() {
-
-    @Id
-    var id: Long = 0
-
-    var version: Long = 0
-
-}
+class User(
+        val name: String,
+        @Column(unique = true) var userName: String,
+        val password: String
+) : BaseModel()
