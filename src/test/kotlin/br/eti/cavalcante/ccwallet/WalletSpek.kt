@@ -49,9 +49,6 @@ object WalletSpek: Spek({
                 transaction { UserData.all().first().name `should equal to` "Igor Cavalcante" }
             }
 
-            it("maxLimit should be 0") {
-                transaction { WalletData.all().first(). `should equal to` 0 }
-            }
         }
     }
 

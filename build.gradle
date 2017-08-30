@@ -14,11 +14,15 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0-RC2'
+        classpath "io.ebean:ebean-gradle-plugin:10.2.3"
     }
 }
 
 apply plugin: 'kotlin'
 apply plugin: 'org.junit.platform.gradle.plugin'
+apply plugin: 'idea'
+apply plugin: 'ebean'
+
 sourceCompatibility = 1.8
 
 junitPlatform {
@@ -49,7 +53,26 @@ repositories {
     maven { url "https://dl.bintray.com/markusamshove/maven/" }
 }
 
+configurations {
+    apt
+}
+
+ebean {
+    debugLevel = 2
+    queryBeans = true
+}
+
+idea {
+    module {
+        sourceDirs += file("$projectDir/generated")
+        generatedSourceDirs += file("$projectDir/generated")
+    }
+}
+
 dependencies {
+    compile "io.ebean:ebean:10.4.1"
+    compile "io.ebean:ebean-querybean:10.3.1"
+
     compile "org.postgresql:postgresql:$postgresql_driver_version"
     testCompile "com.h2database:h2:1.0.60"
     compile 'org.jetbrains.exposed:exposed:0.8.5'
@@ -68,5 +91,11 @@ dependencies {
     }
 
     testCompile "org.amshove.kluent:kluent:$kluent_version"
+}
+
+ebean {
+  debugLevel = 9
+  //queryBeans = true
+  //kotlin = true
 }
 
