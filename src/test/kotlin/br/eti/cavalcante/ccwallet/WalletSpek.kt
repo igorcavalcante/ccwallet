@@ -1,12 +1,17 @@
 package br.eti.cavalcante.ccwallet
 
-import br.eti.cavalcante.ccwallet.model.CreditCard
 import br.eti.cavalcante.ccwallet.model.User
 import br.eti.cavalcante.ccwallet.model.Wallet
-import br.eti.cavalcante.ccwallet.model.query.QUser
-import br.eti.cavalcante.ccwallet.model.query.QWallet
-import org.amshove.kluent.`should be`
+import br.eti.cavalcante.ccwallet.persist.data.UserData
+import br.eti.cavalcante.ccwallet.persist.data.WalletData
+import br.eti.cavalcante.ccwallet.persist.tables.CreditCards
+import br.eti.cavalcante.ccwallet.persist.tables.Users
+import br.eti.cavalcante.ccwallet.persist.tables.Wallets
 import org.amshove.kluent.`should equal to`
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils.create
+import org.jetbrains.exposed.sql.SchemaUtils.drop
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
@@ -15,49 +20,56 @@ import java.math.BigDecimal
 
 object WalletSpek: Spek({
 
-    given("No Wallet") {
+    given("No Wallets") {
+        Database.connect(
+                "jdbc:postgresql://localhost/ccwallet_test",
+                "org.postgresql.Driver",
+                "ccwallet",
+                "ccwallet"
+        )
+
+        beforeEachTest { transaction { create(Users, CreditCards, Wallets) } }
+        afterEachTest { transaction { drop(Users, CreditCards, Wallets) } }
 
         on("Creating an empty wallet") {
+            transaction {
+                Wallet(
+                        User("Igor Cavalcante", "igorrlc", "123"),
+                        listOf(),
+                        BigDecimal.ZERO
+                ).save()
 
-            val wallet = Wallet(
-                    User("Igor Cavalcante", "igorrlc", "123"),
-                    listOf<CreditCard>(),
-                    BigDecimal.ZERO
-            )
-
-            wallet.save()
+            }
 
             it("should create an empty wallet") {
-                val storedWallet = QWallet().findOne()
-                storedWallet!!.cards.size `should equal to` 0
+                transaction { WalletData.all().first().cards.count() `should equal to` 0 }
             }
 
             it("should create an user") {
-                val user = QUser().userName.eq("igorrlc").findOne()
-                user?.name!! `should equal to` "Igor Cavalcante"
+                transaction { UserData.all().first().name `should equal to` "Igor Cavalcante" }
             }
 
+            it("maxLimit should be 0") {
+                transaction { WalletData.all().first(). `should equal to` 0 }
+            }
         }
     }
 
-/*
-        on("Creating with a credit card") {
+    on("Creating with a credit card") {
+    transaction {
+        create(Users, Wallets, CreditCards)
 
-            it("should create a wallet with two credit cards") {
-
-            }
-/*
-test {
-  useTestNG()
-  testLogging.showStandardStreams = true
-  testLogging.exceptionFormat = 'full'
-}*/
-
-            it("should create an user") {
-
-            }
+        it("should create a wallet with two credit cards") {
 
         }
+
+        it("should create an user") {
+
+        }
+
+    }
+}
+    /*
 
         on("Creating with an existent user") {
 
@@ -69,7 +81,7 @@ test {
 
     }
 
-    given("A Wallet with 3 cards having 3 different due dates") {
+    given("A Wallets with 3 cards having 3 different due dates") {
 
         on("Purchasing") {
 
@@ -139,7 +151,7 @@ test {
 
     }
 
-    given("A Wallet with 2 cards with the same due date") {
+    given("A Wallets with 2 cards with the same due date") {
 
         on("Purchasing with a amount smaller than the smallest remaining limit") {
 
