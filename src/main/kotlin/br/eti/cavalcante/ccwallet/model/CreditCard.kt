@@ -16,13 +16,13 @@ class CreditCard(
     var usage : BigDecimal
 ): BaseModel() {
 
-    fun pay(ammount: BigDecimal): BigDecimal {
+    fun pay(ammount: BigDecimal): Triple<BigDecimal, BigDecimal, CreditCard> {
         val freeAmount = userLimit - usage
 
         val paidValue = if(freeAmount < ammount) freeAmount else ammount
         usage += paidValue
 
-        return ammount - paidValue
+        return Triple(ammount - paidValue, paidValue, this)
     }
 
 }

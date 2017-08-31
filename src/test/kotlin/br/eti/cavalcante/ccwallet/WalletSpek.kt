@@ -6,6 +6,7 @@ import br.eti.cavalcante.ccwallet.model.Wallet
 import io.ebean.Ebean
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should equal to`
+import org.amshove.kluent.`should equal`
 import org.amshove.kluent.`should throw`
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.given
@@ -90,23 +91,64 @@ object WalletSpek: Spek({
     }
 
     given("A Wallet with 3 cards having 3 different due dates") {
-
-        on("Purchasing") {
-
+        on("Purchasing with a value smaller than the smaller free limit") {
             val wallet = Wallet(
                     User("Igor Cavalcante", "igorrlc", "123"),
                     listOf(
                             CreditCard("CARD1", "123", LocalDate.now(), 111, LocalDate.now().plusDays(10), TEN, TEN, ONE),
-                            CreditCard("CARD2", "321", LocalDate.now(), 111, LocalDate.now().plusDays(20), TEN, TEN, ONE)
+                            CreditCard("CARD2", "321", LocalDate.now(), 111, LocalDate.now().plusDays(20), TEN, TEN, ONE),
+                            CreditCard("CARD3", "456", LocalDate.now(), 111, LocalDate.now().plusDays(15), TEN, TEN, ONE)
                     ),
                     TEN
             )
 
-            it("should choose the cart that's farther to pay") {
-                wallet.purchase(BigDecimal.ONE)
+            val result = wallet.purchase(BigDecimal.ONE)
+            it("should return the correct PurchaseResult") {
+                result.amount `should be` ONE
+                result.entries.size `should equal to` 1
+                result.entries.first().first `should be` ONE
+                result.entries.first().second.usage `should equal`  BigDecimal("2")
+            }
+
+            it("should choose the card that's farther to pay") {
+                val card1 = Ebean.find(CreditCard::class.java)
+                    .where().eq("name", "CARD2")
+                    .findOne()
+
+                card1!!.usage `should equal` BigDecimal(2)
             }
 
         }
+
+        on("Purchasing with a value greater than the free limit of the card with the farthest due date") {
+            val wallet = Wallet(
+                    User("Igor Cavalcante", "igorrlc", "123"),
+                    listOf(
+                        CreditCard("CARD1", "123", LocalDate.now(), 111, LocalDate.now().plusDays(10), TEN, TEN, ONE),
+                        CreditCard("CARD2", "321", LocalDate.now(), 111, LocalDate.now().plusDays(20), TEN, TEN, ONE),
+                        CreditCard("CARD3", "456", LocalDate.now(), 111, LocalDate.now().plusDays(15), BigDecimal("20"), BigDecimal("20"), ONE)
+                    ),
+                    BigDecimal("30")
+            )
+
+            val result = wallet.purchase(BigDecimal("15"))
+            it("should return the correct PurchaseResult") {
+                result.amount `should equal` BigDecimal("15")
+                result.entries.size `should equal to` 1
+                result.entries.first().first `should be` BigDecimal("15")
+                result.entries.first().second.usage `should equal`  BigDecimal("16")
+            }
+
+            it("should choose the card that's farther to pay and having the available amount") {
+                val card3 = Ebean.find(CreditCard::class.java)
+                    .where().eq("name", "CARD3")
+                    .findOne()
+
+                card3!!.usage `should equal` BigDecimal("16")
+            }
+
+        }
+
 
         on("Purchasing an amount greater than the largest remaining limit") {
 
@@ -167,34 +209,29 @@ object WalletSpek: Spek({
         }
 
     }
+
+    given("A Wallets with 2 cards with the same due date") {
+
+        on("Purchasing with a amount smaller than the smallest remaining limit") {
+
+            it("should choose the one with the smallest remaining limit") {
+            }
+
+        }
+
+        on("Purchasing with a amount greater than the smallest remaining limit") {
+
+            it("should choose the one with the greater remaining limit") {
+            }
+
+        }
+
+    }
+
+
 })
 
-    /*given("A Wallet with 3 cards having 3 different due dates") {
-
-        on("Purchasing") {
-
-            it("should choose the cart that's farther to pay") {
-
-            }
-
-        }
-
-        on("Purchasing an amount greater than the largest remaining limit") {
-
-            it("must divide the purchase into more cards") {
-
-            }
-
-        }
-
-        on("Changing credit limit to less than sum of the limit of the cards") {
-
-            it("should allow the change") {
-
-            }
-
-        }
-
+/*
         on("Changing credit limit to the same value than the sum of the limit of the cards") {
 
             it("should allow the change") {

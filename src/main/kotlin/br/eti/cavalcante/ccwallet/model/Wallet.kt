@@ -51,21 +51,26 @@ class Wallet(
         super.save()
     }
 
-    fun purchase(amount: BigDecimal): List<CreditCard> {
-        val bestCards = getBestCards(amount)
-        return pay(amount, bestCards, listOf())
+    fun purchase(amount: BigDecimal): PurchaseResult {
+        val orderedByDueDate = cards.sortedByDescending { it.dueDate }
+        val result = pay(amount, orderedByDueDate, PurchaseResult(amount))
+        save()
+        return result
     }
 
-    private fun pay(amount: BigDecimal, cards: List<CreditCard>, paidCards: List<CreditCard>): List<CreditCard> {
-        return if(amount == ZERO) {
-            paidCards
-        } else {
-            pay(cards.first().pay(amount), cards.drop(0), paidCards + cards.first())
+    private tailrec fun pay(amount: BigDecimal, cards: List<CreditCard>, result: PurchaseResult): PurchaseResult {
+        return when {
+            amount == ZERO -> result
+//            cards.isEmpty() -> pay(amount, cards.sortedByDescending { it.dueDate }, result)
+            else -> {
+                val individualResult = cards.first().pay(amount)
+                pay(individualResult.first, cards.drop(1), result.addPayment(individualResult))
+            }
         }
     }
 
     private fun getBestCards(amount: BigDecimal) : List<CreditCard>{
-        return listOf(cards.sortedBy { it.dueDate }.last())
+        return cards.sortedBy { it.dueDate }.asReversed()
     }
 
 }
