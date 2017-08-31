@@ -2,7 +2,9 @@ package br.eti.cavalcante.ccwallet.model
 
 import java.math.BigDecimal
 import java.time.LocalDate
+import javax.persistence.Entity
 
+@Entity
 class CreditCard(
     val name : String,
     val number : String,
@@ -11,5 +13,16 @@ class CreditCard(
     val dueDate : LocalDate,
     val userLimit : BigDecimal,
     val maxLimit : BigDecimal,
-    val usage : BigDecimal
-)
+    var usage : BigDecimal
+): BaseModel() {
+
+    fun pay(ammount: BigDecimal): BigDecimal {
+        val freeAmount = userLimit - usage
+
+        val paidValue = if(freeAmount < ammount) freeAmount else ammount
+        usage += paidValue
+
+        return ammount - paidValue
+    }
+
+}
