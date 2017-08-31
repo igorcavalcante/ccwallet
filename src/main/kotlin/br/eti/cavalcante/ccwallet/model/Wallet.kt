@@ -64,11 +64,13 @@ class Wallet(
 //            cards.isEmpty() -> pay(amount, cards.sortedByDescending { it.dueDate }, result)
             else -> {
                 val individualResult = cards.first().pay(amount)
-                pay(individualResult.first, cards.drop(1), result.addPayment(individualResult))
+                val incrementedResult = if(individualResult.second > ZERO) result.addPayment(individualResult) else result
+                pay(individualResult.first, cards.drop(1), incrementedResult)
             }
         }
     }
 
+    //como ordenar por dois campos de maneira decrescente
     private fun getBestCards(amount: BigDecimal) : List<CreditCard>{
         return cards.sortedBy { it.dueDate }.asReversed()
     }
