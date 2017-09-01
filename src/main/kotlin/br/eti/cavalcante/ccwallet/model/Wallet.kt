@@ -7,7 +7,6 @@ import javax.persistence.CascadeType
 import javax.persistence.Entity
 import javax.persistence.OneToMany
 import javax.persistence.OneToOne
-import javax.smartcardio.Card
 
 @Entity
 class Wallet(
@@ -17,26 +16,6 @@ class Wallet(
     val cards: List<CreditCard>,
     val userLimit: BigDecimal
 ): BaseModel() {
-
-/*    fun save(): Wallet {
-        if(userLimit > calculateMaxLimit()) {
-            throw ValidationException(
-                "O Limite da carteira (R$ ${userLimit}) não pode ser maior que a soma do limite dos cartões (R$${calculateMaxLimit()})."
-            )
-        }
-
-        val self = this
-        WalletData.new {
-            user = UserData.new {
-                name = self.user.name
-                userName = self.user.userName
-                password = self.user.password
-            }
-            realLimit = ZERO
-        }
-
-        return this
-    }*/
 
     fun calculateMaxLimit() = cards.fold(ZERO) { acc, card -> acc + card.maxLimit }
 
@@ -51,28 +30,39 @@ class Wallet(
         super.save()
     }
 
+    //testar com free limit
     fun purchase(amount: BigDecimal): PurchaseResult {
-        val orderedByDueDate = cards.sortedByDescending { it.dueDate }
-        val result = pay(amount, orderedByDueDate, PurchaseResult(amount))
+        val cardsOrdered = sortedCards()
+        val cardUsed = cardsOrdered.find { it.pay(amount) }
+
+        val result = if(cardUsed != null) {
+            PurchaseResult(amount, listOf(CreditCard.CreditCardResult(amount, cardUsed)))
+        } else {
+            payPartialy(amount, cardsOrdered, PurchaseResult(amount))
+        }
         save()
         return result
     }
 
-    private tailrec fun pay(amount: BigDecimal, cards: List<CreditCard>, result: PurchaseResult): PurchaseResult {
-        return when {
-            amount == ZERO -> result
-//            cards.isEmpty() -> pay(amount, cards.sortedByDescending { it.dueDate }, result)
+    private tailrec fun payPartialy(amount: BigDecimal, cards: List<CreditCard>, result: PurchaseResult): PurchaseResult {
+        return when (amount) {
+            ZERO -> result
             else -> {
-                val individualResult = cards.first().pay(amount)
-                val incrementedResult = if(individualResult.second > ZERO) result.addPayment(individualResult) else result
-                pay(individualResult.first, cards.drop(1), incrementedResult)
+                val individualResult = cards.first().payPartial(amount)
+                val incrementedResult = if(individualResult.second.amountPaid > ZERO) result.addPayment(individualResult.second) else result
+                payPartialy(individualResult.first, cards.drop(1), incrementedResult)
             }
         }
     }
 
-    //como ordenar por dois campos de maneira decrescente
-    private fun getBestCards(amount: BigDecimal) : List<CreditCard>{
-        return cards.sortedBy { it.dueDate }.asReversed()
+    fun sortedCards() : List<CreditCard>{
+        return cards.sortedWith(Comparator { o1, o2 ->
+            when {
+                o1.dueDate > o2.dueDate -> -1
+                o1.dueDate < o2.dueDate -> 1
+                else -> o1.freeAmount().compareTo(o2.freeAmount())
+            }
+        })
     }
 
 }
