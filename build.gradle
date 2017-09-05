@@ -66,8 +66,6 @@ dependencies {
     compile "io.ebean:ebean-querybean:10.3.1"
 
     compile "org.postgresql:postgresql:$postgresql_driver_version"
-    testCompile "com.h2database:h2:1.0.60"
-    compile 'org.jetbrains.exposed:exposed:0.8.5'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile "org.jetbrains.ktor:ktor-core:$ktor_version"

@@ -6,8 +6,7 @@ create table credit_card (
   expiration_date               date not null,
   security_number               integer not null,
   due_date                      date not null,
-  user_limit                    decimal(38) not null,
-  max_limit                     decimal(38) not null,
+  card_limit                    decimal(38) not null,
   usage                         decimal(38) not null,
   version                       bigint not null,
   whencreated                   timestamp not null,
@@ -29,8 +28,8 @@ create table user (
 
 create table wallet (
   id                            bigint auto_increment not null,
-  user_id                       bigint,
   user_limit                    decimal(38) not null,
+  user_id                       bigint,
   version                       bigint not null,
   whencreated                   timestamp not null,
   when_modified                 timestamp not null,

@@ -3,18 +3,18 @@ package br.eti.cavalcante.ccwallet.model
 import java.math.BigDecimal
 import java.math.BigDecimal.ZERO
 import java.time.LocalDate
+import java.time.Month
 import javax.persistence.Entity
 
 @Entity
 class CreditCard(
-    val name : String,
-    val number : String,
-    val expirationDate : LocalDate,
-    val securityNumber : Int,
-    val dueDate : LocalDate,
-    val userLimit : BigDecimal,
-    val maxLimit : BigDecimal,
-    var usage : BigDecimal
+        val name : String,
+        val number : String,
+        val expirationDate : LocalDate,
+        val securityNumber : Int,
+        var dueDate : LocalDate,
+        val cardLimit : BigDecimal,
+        var usage : BigDecimal
 ): BaseModel() {
 
     class CreditCardResult(val amountPaid: BigDecimal, val card: CreditCard)
@@ -39,6 +39,10 @@ class CreditCard(
         }
     }
 
-    fun freeAmount() = userLimit - usage
+    fun freeAmount() = cardLimit - usage
+
+    fun payInvoice() {
+        this.dueDate = this.dueDate.plusMonths(1)
+    }
 
 }

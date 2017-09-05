@@ -39,7 +39,7 @@ object WalletSpek: Spek({
                         .findOne()
 
                 wallet!!.user.userName `should equal to` "igorrlc"
-                wallet!!.cards.size `should equal to` 0
+                wallet.cards.size `should equal to` 0
             }
         }
 
@@ -47,8 +47,8 @@ object WalletSpek: Spek({
             Wallet(
                     User("Igor Cavalcante", "igorrlc", "123"),
                     listOf(
-                            CreditCard("IGOR R L CAVALCANTE", "123", LocalDate.now(), 111, LocalDate.now(), TEN, TEN, ONE),
-                            CreditCard("IGOR R L CAVALCANTE", "321", LocalDate.now(), 111, LocalDate.now(), TEN, TEN, ONE)
+                            CreditCard("IGOR R L CAVALCANTE", "123", LocalDate.now(), 111, LocalDate.now(), TEN, ONE),
+                            CreditCard("IGOR R L CAVALCANTE", "321", LocalDate.now(), 111, LocalDate.now(), TEN, ONE)
                     ),
                     TEN
             ).save()
@@ -59,11 +59,11 @@ object WalletSpek: Spek({
 
             it("should create a wallet with two credit cards") {
                 wallet!!.user.userName `should equal to` "igorrlc"
-                wallet!!.cards.size `should equal to` 2
+                wallet.cards.size `should equal to` 2
             }
 
             it("should have the correct limits") {
-                wallet!!.cards.first().maxLimit `should be` TEN
+                wallet!!.cards.first().cardLimit `should be` TEN
             }
         }
 
@@ -71,8 +71,8 @@ object WalletSpek: Spek({
             Wallet(
                     User("Igor Cavalcante", "igorrlc", "123"),
                     listOf(
-                            CreditCard("IGOR R L CAVALCANTE", "123", LocalDate.now(), 111, LocalDate.now(), TEN, TEN, ONE),
-                            CreditCard("IGOR R L CAVALCANTE", "321", LocalDate.now(), 111, LocalDate.now(), TEN, TEN, ONE)
+                            CreditCard("IGOR R L CAVALCANTE", "123", LocalDate.now(), 111, LocalDate.now(), TEN, ONE),
+                            CreditCard("IGOR R L CAVALCANTE", "321", LocalDate.now(), 111, LocalDate.now(), TEN, ONE)
                     ),
                     TEN
             ).save()
@@ -96,9 +96,9 @@ object WalletSpek: Spek({
             val ordered = Wallet(
                 User("Igor Cavalcante", "igorrlc", "123"),
                 listOf(
-                    CreditCard("CARD1", "123", LocalDate.now(), 111, LocalDate.now().plusDays(10), TEN, TEN, ONE),
-                    CreditCard("CARD2", "321", LocalDate.now(), 111, LocalDate.now().plusDays(10), TEN, TEN, BigDecimal("6")),
-                    CreditCard("CARD3", "456", LocalDate.now(), 111, LocalDate.now().plusDays(15), TEN, TEN, BigDecimal("5"))
+                    CreditCard("CARD1", "123", LocalDate.now(), 111, LocalDate.now().plusDays(10), TEN, ONE),
+                    CreditCard("CARD2", "321", LocalDate.now(), 111, LocalDate.now().plusDays(10), TEN, BigDecimal("6")),
+                    CreditCard("CARD3", "456", LocalDate.now(), 111, LocalDate.now().plusDays(15), TEN, BigDecimal("5"))
                 ),
                 TEN
             ).sortedCards()
@@ -117,11 +117,11 @@ object WalletSpek: Spek({
             Wallet(
                 User("Igor Cavalcante", "igorrlc", "123"),
                 listOf(
-                    CreditCard("CARD1", "123", LocalDate.now(), 111, LocalDate.now().plusDays(10), TEN, TEN, ONE),
-                    CreditCard("CARD2", "321", LocalDate.now(), 111, LocalDate.now().plusDays(20), TEN, TEN, ONE),
-                    CreditCard("CARD3", "456", LocalDate.now(), 111, LocalDate.now().plusDays(15), BigDecimal("20"), BigDecimal("20"), ONE)
+                    CreditCard("CARD1", "123", LocalDate.now(), 111, LocalDate.now().plusDays(10), TEN, ONE),
+                    CreditCard("CARD2", "321", LocalDate.now(), 111, LocalDate.now().plusDays(20), TEN, ONE),
+                    CreditCard("CARD3", "456", LocalDate.now(), 111, LocalDate.now().plusDays(15), BigDecimal("20"), ONE)
                 ),
-                TEN
+                BigDecimal("20")
             )
         }
 
@@ -195,162 +195,102 @@ object WalletSpek: Spek({
 
         }
 
-        on("Purchasing an amount greater than the wallet limit") {
-
-            it("must divide the purchase into more cards") {
-
-            }
-
-        }
-
         on("Purchasing an amount greater than wallet credit available") {
+            val wallet = wallet3Cards()
+            val result = wallet.purchase(BigDecimal("100.00"))
 
-            it("must divide the purchase into more cards") {
-
+            it("should not complete the transaction") {
+                result.success `should equal to` false
+                result.amount `should equal` ZERO
             }
-
         }
 
         on("Changing credit limit to less than sum of the limit of the cards") {
+            val wallet = wallet3Cards()
+            val result = wallet.updateLimit(BigDecimal("21"))
 
             it("should allow the change") {
-
-            }
-
-        }
-
-        on("Changing credit limit to the same value than the sum of the limit of the cards") {
-
-            it("should allow the change") {
-
+                result.success `should equal to` true
+                wallet.userLimit `should equal` BigDecimal(21)
             }
 
         }
 
         on("Changing credit limit to more than the sum of the limit of the cards") {
+            val wallet = wallet3Cards()
+            val result = wallet.updateLimit(BigDecimal("1000"))
 
             it("should deny the change") {
-
+                result.success `should equal` false
+                wallet.userLimit `should equal` BigDecimal("20")
             }
-
         }
 
         on("removing a card") {
+            val wallet = wallet3Cards()
+            wallet.save()
+            wallet.removeCard("123")
+
             it("should decrease the number of cards") {
-
+               wallet.cards.size `should equal to` 2
             }
 
-            it("should decrease the maximum limit") {
-
+            it("should delete the card from database") {
+                val count = Ebean.find(CreditCard::class.java).findCount()
+                count `should equal to` 2
             }
-
         }
 
-        on("removing a card and your real limit being fewer than you maximum limit") {
+        on("removing a non existent card") {
+            val wallet = wallet3Cards()
+            val result = wallet.removeCard("999")
+
+            it("should return an error") {
+                result.success `should equal to` false
+            }
+
+            it("should not alter the number of cards") {
+                wallet.cards.size `should equal to` 3
+            }
+        }
+
+        on("removing a card and your user limit being fewer than you maximum limit") {
+            val wallet = wallet3Cards()
+            wallet.updateLimit(BigDecimal("40"))
+            val result = wallet.removeCard("456")
+
+            it("should return not an error") {
+                result.success `should equal to` true
+            }
+
+            it("should alter the number of cards") {
+                wallet.cards.size `should equal to` 2
+            }
 
             it("should adjust your real limit to the real limit value and emit a message") {
-
+                wallet.userLimit `should equal` BigDecimal("20")
             }
 
-        }
-
-        on("fetching the card information") {
-            it("should be able to show all information of the wallet (including real limit, maximum limit and avaiable credit)") {
-
-            }
         }
 
     }
 
-    given("A Wallets with 2 cards with the same due date") {
+    given("Wallet with one card") {
         val wallet = Wallet(
             User("Igor Cavalcante", "igorrlc", "123"),
             listOf(
-                CreditCard("CARD1", "123", LocalDate.now(), 111, LocalDate.now(), TEN, TEN, ONE),
-                CreditCard("CARD2", "321", LocalDate.now(), 111, LocalDate.now(), TEN, TEN, BigDecimal("5"))
+                CreditCard("TESTE", "123", LocalDate.of(2099, 9, 1), 111, LocalDate.of(2017, 9, 1), TEN, ONE)
             ),
-            TEN
+            BigDecimal("10")
         )
 
-        on("Purchasing with a amount smaller than the smallest remaining limit") {
-
-            it("should choose the one with the smallest remaining limit") {
+        on("paying the invoices") {
+            wallet.payInvoice("123")
+            it("should alter the paymentDate to + 1 month") {
+                wallet.cards.first().dueDate `should equal` LocalDate.of(2017, 10, 1)
             }
-
         }
-
-        on("Purchasing with a amount greater than the smallest remaining limit") {
-
-            it("should choose the one with the greater remaining limit") {
-            }
-
-        }
-
     }
-
 
 })
 
-/*
-        on("Changing credit limit to the same value than the sum of the limit of the cards") {
-
-            it("should allow the change") {
-
-            }
-
-        }
-
-        on("Changing credit limit to more than the sum of the limit of the cards") {
-
-            it("should deny the change") {
-
-            }
-
-        }
-
-        on("removing a card") {
-
-            it("should decrease the number of cards") {
-
-            }
-
-            it("should decrease the maximum limit") {
-
-            }
-
-        }
-
-        on("removing a card and your real limit being fewer than you maximum limit") {
-
-            it("should adjust your real limit to the real limit value and emit a message") {
-
-            }
-
-        }
-
-        on("fetching the card information") {
-            it("should be able to show all information of the wallet (including real limit, maximum limit and avaiable credit)") {
-
-            }
-        }
-
-    }
-
-    given("A Wallets with 2 cards with the same due date") {
-
-        on("Purchasing with a amount smaller than the smallest remaining limit") {
-
-            it("should choose the one with the smallest remaining limit") {
-            }
-
-        }
-
-        on("Purchasing with a amount greater than the smallest remaining limit") {
-
-            it("should choose the one with the greater remaining limit") {
-            }
-
-        }
-
-    }
-*/
