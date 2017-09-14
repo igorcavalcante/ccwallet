@@ -1,8 +1,7 @@
 package br.eti.cavalcante.ccwallet.model
 
-import br.eti.cavalcante.ccwallet.model.OperationResult.ResultCode.*
-
+import org.jetbrains.ktor.http.HttpStatusCode
 
 class OperationResultError(
-    message: String, code: ResultCode = ERROR
-) : OperationResult(false, message, code)
+    content: Any, code: HttpStatusCode = HttpStatusCode.InternalServerError
+) : OperationResult(content, false, code)

@@ -3,7 +3,6 @@ package br.eti.cavalcante.ccwallet.model
 import java.math.BigDecimal
 import java.math.BigDecimal.ZERO
 import java.time.LocalDate
-import java.time.Month
 import javax.persistence.Entity
 
 @Entity

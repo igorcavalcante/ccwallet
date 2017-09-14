@@ -1,14 +1,8 @@
 package br.eti.cavalcante.ccwallet.model
 
-import br.eti.cavalcante.ccwallet.model.OperationResult.ResultCode.*
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import org.jetbrains.ktor.http.HttpStatusCode
+import org.jetbrains.ktor.http.HttpStatusCode.Companion.OK
 
-
-open class OperationResult(val success: Boolean = true, val message: String = "", val code: ResultCode = OK) {
-
-    enum class ResultCode(val httpCode: Int) {
-        NOT_FOUND(404),
-        ERROR(500),
-        OK(200),
-        CREATED(201)
-    }
-}
+@JsonIgnoreProperties(value = *arrayOf("success", "code"))
+open class OperationResult(val content: Any, val success: Boolean = true, val code: HttpStatusCode = OK)

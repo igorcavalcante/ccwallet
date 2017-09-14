@@ -1,7 +1,8 @@
 package br.eti.cavalcante.ccwallet.model
 
 import br.eti.cavalcante.ccwallet.exceptions.ValidationException
-import br.eti.cavalcante.ccwallet.model.OperationResult.ResultCode.NOT_FOUND
+import com.fasterxml.jackson.annotation.JsonProperty
+import org.jetbrains.ktor.http.HttpStatusCode
 import java.math.BigDecimal
 import java.math.BigDecimal.ZERO
 import javax.persistence.CascadeType
@@ -18,6 +19,7 @@ class Wallet(
     limit: BigDecimal
 ): BaseModel() {
 
+    @JsonProperty("limit")
     var userLimit = limit
     private set
 
@@ -81,7 +83,7 @@ class Wallet(
 
     fun updateLimit(amount: BigDecimal): OperationResult {
         return if(amount > calculateMaxLimit()) {
-            OperationResult(false, "O valor $amount ultrapassa o somatório dos limites dos cartões na carteira, que é ${calculateMaxLimit()}")
+            OperationResultError("O valor $amount ultrapassa o somatório dos limites dos cartões na carteira, que é ${calculateMaxLimit()}", HttpStatusCode.BadRequest)
         } else {
             userLimit = amount
             save()
@@ -96,9 +98,9 @@ class Wallet(
             if(calculateMaxLimit() < userLimit) { userLimit = calculateMaxLimit() }
             card.delete()
             save()
-            OperationResult(message = "Cartão com o número $cardNumber foi removido com sucesso da carteira")
+            OperationResult("Cartão com o número $cardNumber foi removido com sucesso da carteira")
         } else {
-            OperationResultError("Cartão com o número $cardNumber não foi encontrado", NOT_FOUND)
+            OperationResultError("Cartão com o número $cardNumber não foi encontrado", HttpStatusCode.NotFound)
         }
     }
 
@@ -107,9 +109,9 @@ class Wallet(
         return if(card != null) {
             card.payInvoice()
             card.update()
-            OperationResult(message = "Fatura do cartão: $cardNumber paga")
+            OperationResult("Fatura do cartão: $cardNumber paga")
         } else {
-            OperationResultError("Cartão com o número $cardNumber não foi encontrado", NOT_FOUND)
+            OperationResultError("Cartão com o número $cardNumber não foi encontrado", HttpStatusCode.NotFound)
         }
     }
 
