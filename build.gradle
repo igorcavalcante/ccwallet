@@ -78,6 +78,8 @@ dependencies {
     compile "org.jetbrains.ktor:ktor-core:$ktor_version"
     compile "org.jetbrains.ktor:ktor-netty:$ktor_version"
     compile "org.jetbrains.ktor:ktor-gson:$ktor_version"
+    compile "org.jetbrains.ktor:ktor-auth:$ktor_version"
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.9'
 //    compile "org.jetbrains.ktor:ktor-jackson:$ktor_version"
     compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: '2.9.1'
     compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.9.1'

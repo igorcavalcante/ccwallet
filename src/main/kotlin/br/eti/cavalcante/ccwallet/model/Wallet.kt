@@ -1,5 +1,6 @@
 package br.eti.cavalcante.ccwallet.model
 
+import br.eti.cavalcante.ccwallet.digest
 import br.eti.cavalcante.ccwallet.exceptions.ValidationException
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.jetbrains.ktor.http.HttpStatusCode
@@ -12,7 +13,7 @@ import javax.persistence.OneToOne
 
 @Entity
 class Wallet(
-    @OneToOne(cascade = arrayOf(CascadeType.ALL))
+    @OneToOne(mappedBy = "wallet", cascade = arrayOf(CascadeType.ALL))
     val user: User,
     @OneToMany(cascade = arrayOf(CascadeType.ALL))
     var cards: List<CreditCard>,
@@ -25,7 +26,6 @@ class Wallet(
 
     private fun calculateMaxLimit() = cards.fold(ZERO) { acc, card -> acc + card.cardLimit }
 
-    //Verificar duplicidade dos cartoes
     override fun save() {
         if(userLimit > calculateMaxLimit()) {
             throw ValidationException(
@@ -33,6 +33,7 @@ class Wallet(
             )
         }
 
+        user.password = digest(user.password)
         super.save()
     }
 
@@ -42,7 +43,7 @@ class Wallet(
                 ZERO,
                 listOf(),
                 false,
-                "Não foi possível realizar a transação no valor de $amount, pois o limite disponível na carteira é de: ${getFreeAmount()}"
+                "Não foi possível realizar a transação no valor de $amount, pois o saldo disponível na carteira é de: ${getFreeAmount()}"
             )
         } else {
             val cardsOrdered = sortedCards()
@@ -87,7 +88,7 @@ class Wallet(
         } else {
             userLimit = amount
             save()
-            OperationResult(true)
+            OperationResult("Limite atualizado para $amount")
         }
     }
 
@@ -104,12 +105,21 @@ class Wallet(
         }
     }
 
+    fun addCard(card: CreditCard): OperationResult {
+        val exists = cards.any { it.number == card.number }
+        return if(exists) {
+            OperationResultError("Cartão com o número ${card.number} já existe na carteira", HttpStatusCode.BadRequest)
+        } else {
+            OperationResult("Cartão cadastrado com sucesso!")
+        }
+    }
+
     fun payInvoice(cardNumber: String): OperationResult {
         val card = cards.find { it.number == cardNumber }
         return if(card != null) {
             card.payInvoice()
             card.update()
-            OperationResult("Fatura do cartão: $cardNumber paga")
+            OperationResult("Fatura do cartão: $cardNumber paga. O novo vencimento é: ${card.dueDate}")
         } else {
             OperationResultError("Cartão com o número $cardNumber não foi encontrado", HttpStatusCode.NotFound)
         }
