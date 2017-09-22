@@ -21,7 +21,6 @@ import org.jetbrains.ktor.request.receiveText
 import org.jetbrains.ktor.response.respondText
 import org.jetbrains.ktor.routing.*
 import java.math.BigDecimal
-import java.security.MessageDigest
 import java.text.SimpleDateFormat
 
 val contentType = ContentType.parse("application/json")
