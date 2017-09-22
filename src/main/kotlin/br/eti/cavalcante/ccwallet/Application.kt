@@ -101,6 +101,8 @@ fun Application.main() {
             post("/wallet/purchase") {
                 val body = call.receiveText()
                 val request: PurchaseRequest = json.mapper.readValue(body, PurchaseRequest::class.java)
+                val response = user!!.wallet.purchase(request.amount)
+                response.prepare(user!!.password)
                 genResp(user!!.wallet.purchase(request.amount), call)
             }
         }

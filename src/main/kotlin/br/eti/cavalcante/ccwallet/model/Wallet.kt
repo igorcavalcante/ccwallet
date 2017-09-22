@@ -2,6 +2,7 @@ package br.eti.cavalcante.ccwallet.model
 
 import br.eti.cavalcante.ccwallet.digest
 import br.eti.cavalcante.ccwallet.exceptions.ValidationException
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.jetbrains.ktor.http.HttpStatusCode
 import java.math.BigDecimal
@@ -17,7 +18,8 @@ class Wallet(
     val user: User,
     @OneToMany(cascade = arrayOf(CascadeType.ALL))
     var cards: List<CreditCard>,
-    limit: BigDecimal
+    limit: BigDecimal,
+    @JsonIgnore @Transient var key: String?
 ): BaseModel() {
 
     @JsonProperty("limit")
@@ -32,6 +34,8 @@ class Wallet(
                 "O Limite da carteira (R$ ${userLimit}) não pode ser maior que a soma do limite dos cartões (R$${calculateMaxLimit()})."
             )
         }
+
+        cards.forEach {it.key = key}
 
         user.password = digest(user.password)
         super.save()

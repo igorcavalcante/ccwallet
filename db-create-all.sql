@@ -1,10 +1,10 @@
 create table credit_card (
   id                            bigint auto_increment not null,
   wallet_id                     bigint not null,
-  name                          varchar(255) not null,
-  number                        varchar(255) not null,
+  crypt_name                    varchar(255),
+  crypt_number                  varchar(255),
+  crypt_security_number         varchar(255),
   expiration_date               date not null,
-  security_number               integer not null,
   due_date                      date not null,
   card_limit                    decimal(38) not null,
   usage                         decimal(38) not null,
