@@ -1,26 +1,30 @@
 package br.eti.cavalcante.ccwallet.model
 
-import br.eti.cavalcante.ccwallet.dec
-import br.eti.cavalcante.ccwallet.enc
+import br.eti.cavalcante.ccwallet.CryptDelegator
+import br.eti.cavalcante.ccwallet.CryptUtil
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.math.BigDecimal
 import java.math.BigDecimal.ZERO
 import java.time.LocalDate
+import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.Transient
-import javax.xml.bind.ValidationException
 
 @Entity
 class CreditCard(
-        @Transient var name : String,
-        @Transient var number : String,
+        @Transient var name: String,
+        @Transient var number: String,
         val expirationDate : LocalDate,
         @Transient var securityNumber : Int,
         var dueDate : LocalDate,
         val cardLimit : BigDecimal,
-        var usage : BigDecimal,
-        @Transient var key: String? = null
+        var usage : BigDecimal
 ): BaseModel() {
+
+    init {
+        encFields()
+        decFields()
+    }
 
     @JsonIgnore var cryptName: String? = null
     @JsonIgnore var cryptNumber: String? = null
@@ -55,24 +59,27 @@ class CreditCard(
     }
 
     override fun save() {
-        if(key == null)
+/*        if(key == null)
             throw ValidationException("A chave precisa ser definida antes de salvar o cartão de crédito")
-        else {
-            encFields(key!!)
+        else {*/
             super.save()
+        //}
+    }
+
+    fun encFields() {
+        if(cryptName == null || cryptNumber == null || cryptSecurityNumber == null) {
+            cryptName = CryptUtil.enc(name)
+            cryptNumber = CryptUtil.enc(number)
+            cryptSecurityNumber = CryptUtil.enc(securityNumber.toString())
         }
     }
 
-    fun encFields(key: String) {
-        cryptName = enc(key, name)
-        cryptNumber = enc(key, number)
-        cryptSecurityNumber = enc(key, securityNumber.toString())
-    }
-
-    fun decFields(key: String) {
-        name = dec(key, cryptName!!)
-        number = dec(key, cryptNumber!!)
-        securityNumber = dec(key, cryptSecurityNumber!!).toInt()
+    fun decFields() {
+        if(name == null || number == null || securityNumber == null) {
+            name = CryptUtil.dec(cryptName!!)
+            number = CryptUtil.dec(cryptNumber!!)
+            securityNumber = CryptUtil.dec(cryptSecurityNumber!!).toInt()
+        }
     }
 
 }

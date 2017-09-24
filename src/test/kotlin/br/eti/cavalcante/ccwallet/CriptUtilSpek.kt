@@ -13,10 +13,10 @@ class CryptUtilSpek: Spek({
 
         on("Encypting") {
 
-            val encoded = enc("123456789", "111222333444")
+            val encoded = CryptUtil.init("123456789").enc( "111222333444")
 
             it("should transform data in a reversible way") {
-                dec("123456789", encoded) `should equal to` "1112223334441"
+                CryptUtil.dec( encoded) `should equal to` "1112223334441"
             }
         }
 

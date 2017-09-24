@@ -1,6 +1,6 @@
 package br.eti.cavalcante.ccwallet.model
 
-import br.eti.cavalcante.ccwallet.digest
+import br.eti.cavalcante.ccwallet.CryptUtil
 import br.eti.cavalcante.ccwallet.exceptions.ValidationException
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -18,8 +18,7 @@ class Wallet(
     val user: User,
     @OneToMany(cascade = arrayOf(CascadeType.ALL))
     var cards: List<CreditCard>,
-    limit: BigDecimal,
-    @JsonIgnore @Transient var key: String?
+    limit: BigDecimal
 ): BaseModel() {
 
     @JsonProperty("limit")
@@ -35,9 +34,8 @@ class Wallet(
             )
         }
 
-        cards.forEach {it.key = key}
-
-        user.password = digest(user.password)
+        CryptUtil.init(user.password)
+        user.password = CryptUtil.digest()
         super.save()
     }
 

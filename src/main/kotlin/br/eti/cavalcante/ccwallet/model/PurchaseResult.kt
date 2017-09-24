@@ -12,8 +12,4 @@ class PurchaseResult(
     fun addPayment(payment: CreditCard.CreditCardResult) =
         PurchaseResult(amount, entries + payment)
 
-    fun prepare(key: String) {
-        entries.forEach{ it.card.decFields(key) }
-    }
-
 }

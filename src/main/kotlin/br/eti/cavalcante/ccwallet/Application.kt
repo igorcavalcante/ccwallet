@@ -64,7 +64,7 @@ fun Application.main() {
             var user : User? = null
             authentication {
                 basicAuthentication("ccwallet") {
-                    user = User.auth(it.name, digest(it.password))
+                    user = User.auth(it.name, CryptUtil.init(it.password).digest())
                     if (user != null) UserIdPrincipal(it.name) else null
                 }
             }
@@ -101,8 +101,6 @@ fun Application.main() {
             post("/wallet/purchase") {
                 val body = call.receiveText()
                 val request: PurchaseRequest = json.mapper.readValue(body, PurchaseRequest::class.java)
-                val response = user!!.wallet.purchase(request.amount)
-                response.prepare(user!!.password)
                 genResp(user!!.wallet.purchase(request.amount), call)
             }
         }
