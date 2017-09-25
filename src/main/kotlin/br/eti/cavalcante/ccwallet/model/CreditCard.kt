@@ -1,13 +1,14 @@
 package br.eti.cavalcante.ccwallet.model
 
-import br.eti.cavalcante.ccwallet.CryptDelegator
 import br.eti.cavalcante.ccwallet.CryptUtil
+import com.fasterxml.jackson.annotation.JsonGetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.math.BigDecimal
 import java.math.BigDecimal.ZERO
 import java.time.LocalDate
 import javax.persistence.Column
 import javax.persistence.Entity
+import javax.persistence.PrePersist
 import javax.persistence.Transient
 
 @Entity
@@ -21,14 +22,13 @@ class CreditCard(
         var usage : BigDecimal
 ): BaseModel() {
 
-    init {
-        encFields()
-        decFields()
-    }
+    @JsonIgnore @Column(nullable = false) var cryptName: String? = null
+    @JsonIgnore @Column(nullable = false) var cryptNumber: String? = null
+    @JsonIgnore @Column(nullable = false) var cryptSecurityNumber: String? = null
 
-    @JsonIgnore var cryptName: String? = null
-    @JsonIgnore var cryptNumber: String? = null
-    @JsonIgnore var cryptSecurityNumber: String? = null
+    @JsonGetter("name") fun getDecName() = CryptUtil.dec(cryptName!!)
+    @JsonGetter("number") fun getDecNumber() = CryptUtil.dec(cryptNumber!!)
+    @JsonGetter("securityNumber") fun getDecSecutiryNumber() = CryptUtil.dec(cryptSecurityNumber!!).toInt()
 
     class CreditCardResult(val amountPaid: BigDecimal, val card: CreditCard)
 
@@ -58,14 +58,7 @@ class CreditCard(
         this.dueDate = this.dueDate.plusMonths(1)
     }
 
-    override fun save() {
-/*        if(key == null)
-            throw ValidationException("A chave precisa ser definida antes de salvar o cartão de crédito")
-        else {*/
-            super.save()
-        //}
-    }
-
+    @PrePersist
     fun encFields() {
         if(cryptName == null || cryptNumber == null || cryptSecurityNumber == null) {
             cryptName = CryptUtil.enc(name)
@@ -74,12 +67,5 @@ class CreditCard(
         }
     }
 
-    fun decFields() {
-        if(name == null || number == null || securityNumber == null) {
-            name = CryptUtil.dec(cryptName!!)
-            number = CryptUtil.dec(cryptNumber!!)
-            securityNumber = CryptUtil.dec(cryptSecurityNumber!!).toInt()
-        }
-    }
 
 }

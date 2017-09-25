@@ -34,8 +34,6 @@ class Wallet(
             )
         }
 
-        CryptUtil.init(user.password)
-        user.password = CryptUtil.digest()
         super.save()
     }
 
@@ -95,7 +93,8 @@ class Wallet(
     }
 
     fun removeCard(cardNumber: String): OperationResult {
-        val card = cards.find { it.number == cardNumber }
+        val cryptNumber = CryptUtil.enc(cardNumber)
+        val card = cards.find { it.cryptNumber == cryptNumber }
         return if(card != null) {
             cards -= card
             if(calculateMaxLimit() < userLimit) { userLimit = calculateMaxLimit() }
@@ -108,16 +107,19 @@ class Wallet(
     }
 
     fun addCard(card: CreditCard): OperationResult {
-        val exists = cards.any { it.number == card.number }
+        card.encFields()
+        val exists = cards.any { it.cryptNumber == card.cryptNumber }
         return if(exists) {
             OperationResultError("Cartão com o número ${card.number} já existe na carteira", HttpStatusCode.BadRequest)
         } else {
+            cards += card
+            save()
             OperationResult("Cartão cadastrado com sucesso!")
         }
     }
 
     fun payInvoice(cardNumber: String): OperationResult {
-        val card = cards.find { it.number == cardNumber }
+        val card = cards.find { it.cryptNumber == CryptUtil.enc(cardNumber) }
         return if(card != null) {
             card.payInvoice()
             card.update()

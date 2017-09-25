@@ -1,6 +1,8 @@
 package br.eti.cavalcante.ccwallet.model
 
+import br.eti.cavalcante.ccwallet.CryptUtil
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.ebean.Ebean
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -10,8 +12,11 @@ import javax.persistence.OneToOne
 data class User(
     val name: String,
     @Column(unique = true) val userName: String,
-    var password: String
+    @JsonProperty(value = "password") @Transient private val _password: String
 ) : BaseModel() {
+
+    var password = CryptUtil.init(_password).digest()
+    @JsonIgnore get() = field
 
     @OneToOne @JsonIgnore lateinit var wallet: Wallet
 
