@@ -1,5 +1,6 @@
 package br.eti.cavalcante.ccwallet
 
+import br.eti.cavalcante.util.CryptUtil
 import br.eti.cavalcante.ccwallet.model.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -64,7 +65,7 @@ fun Application.main() {
             var user : User? = null
             authentication {
                 basicAuthentication("ccwallet") {
-                    user = User.auth(it.name, CryptUtil.init(it.password).digest())
+                    user = User.auth(it.name, CryptUtil.digest())
                     if (user != null) UserIdPrincipal(it.name) else null
                 }
             }

@@ -1,4 +1,4 @@
-package br.eti.cavalcante.ccwallet
+package br.eti.cavalcante.util
 
 import org.apache.commons.codec.digest.DigestUtils
 import java.util.*
@@ -11,7 +11,7 @@ object CryptUtil {
     private lateinit var key: String
 
     fun init(key: String): CryptUtil {
-        this.key = key
+        CryptUtil.key = key
         return this
     }
 

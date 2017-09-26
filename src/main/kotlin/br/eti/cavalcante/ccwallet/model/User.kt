@@ -1,6 +1,6 @@
 package br.eti.cavalcante.ccwallet.model
 
-import br.eti.cavalcante.ccwallet.CryptUtil
+import br.eti.cavalcante.util.CryptUtil
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.ebean.Ebean

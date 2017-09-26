@@ -3,7 +3,11 @@ package br.eti.cavalcante.ccwallet
 import br.eti.cavalcante.ccwallet.model.CreditCard
 import br.eti.cavalcante.ccwallet.model.User
 import br.eti.cavalcante.ccwallet.model.Wallet
+import br.eti.cavalcante.util.CryptUtil
 import io.ebean.Ebean
+import io.ebean.config.ServerConfig
+import io.ebean.dbmigration.DdlGenerator
+import io.ebeaninternal.api.SpiEbeanServer
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should equal to`
 import org.amshove.kluent.`should equal`
@@ -63,7 +67,7 @@ object WalletSpek: Spek({
             }
 
             it("should have the correct limits") {
-                wallet!!.cards.first().cardLimit `should be` TEN
+                wallet!!.cards.first().cardLimit `should equal` TEN
             }
         }
 
@@ -139,7 +143,7 @@ object WalletSpek: Spek({
 
             it("should choose the card that's farther to pay") {
                 val card2 = Ebean.find(CreditCard::class.java)
-                    .where().eq("name", "CARD2")
+                    .where().eq("cryptName", CryptUtil.enc("CARD2"))
                     .findOne()
 
                 card2!!.usage `should equal` BigDecimal(2)
@@ -160,7 +164,7 @@ object WalletSpek: Spek({
 
             it("should choose the card that's farther to pay and having the available amount") {
                 val card3 = Ebean.find(CreditCard::class.java)
-                    .where().eq("name", "CARD3")
+                    .where().eq("cryptName", CryptUtil.enc("CARD3"))
                     .findOne()
 
                 card3!!.usage `should equal` BigDecimal("16")
@@ -181,15 +185,15 @@ object WalletSpek: Spek({
 
             it("should update the usage values of the cards") {
                 val card1 = Ebean.find(CreditCard::class.java)
-                    .where().eq("name", "CARD1").findOne()
+                    .where().eq("cryptName", CryptUtil.enc("CARD1")).findOne()
                 card1!!.usage `should equal` ONE
 
                 val card2 = Ebean.find(CreditCard::class.java)
-                    .where().eq("name", "CARD2").findOne()
+                    .where().eq("cryptName", CryptUtil.enc("CARD2")).findOne()
                 card2!!.usage `should equal` BigDecimal("10")
 
                 val card3 = Ebean.find(CreditCard::class.java)
-                    .where().eq("name", "CARD3").findOne()
+                    .where().eq("cryptName", CryptUtil.enc("CARD3")).findOne()
                 card3!!.usage `should equal` BigDecimal("12")
             }
 
@@ -277,15 +281,21 @@ object WalletSpek: Spek({
 
     given("Wallet with one card") {
         val wallet = Wallet(
-            User("Igor Cavalcante", "igorrlc", "123"),
-            listOf(
-                CreditCard("TESTE", "123", LocalDate.of(2099, 9, 1), 111, LocalDate.of(2017, 9, 1), TEN, ONE)
-            ),
-            BigDecimal("10")
+                User("Igor Cavalcante", "teste", "123"),
+                listOf(
+                        CreditCard("TESTE", "123", LocalDate.of(2099, 9, 1), 111, LocalDate.of(2017, 9, 1), TEN, ONE)
+                ),
+                BigDecimal("10")
         )
+        wallet.save()
 
         on("paying the invoices") {
-            wallet.payInvoice("123")
+            val result = wallet.payInvoice("123")
+
+            it("should result in a successful operation") {
+                result.success `should be` true
+            }
+
             it("should alter the paymentDate to + 1 month") {
                 wallet.cards.first().dueDate `should equal` LocalDate.of(2017, 10, 1)
             }

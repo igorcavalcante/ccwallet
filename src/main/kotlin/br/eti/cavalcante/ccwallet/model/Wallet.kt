@@ -1,8 +1,7 @@
 package br.eti.cavalcante.ccwallet.model
 
-import br.eti.cavalcante.ccwallet.CryptUtil
+import br.eti.cavalcante.util.CryptUtil
 import br.eti.cavalcante.ccwallet.exceptions.ValidationException
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.jetbrains.ktor.http.HttpStatusCode
 import java.math.BigDecimal
@@ -123,6 +122,7 @@ class Wallet(
         return if(card != null) {
             card.payInvoice()
             card.update()
+            this.save()
             OperationResult("Fatura do cartão: $cardNumber paga. O novo vencimento é: ${card.dueDate}")
         } else {
             OperationResultError("Cartão com o número $cardNumber não foi encontrado", HttpStatusCode.NotFound)

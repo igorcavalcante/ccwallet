@@ -1,5 +1,6 @@
 package br.eti.cavalcante.ccwallet
 
+import br.eti.cavalcante.util.CryptUtil
 import org.amshove.kluent.`should equal to`
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -16,7 +17,7 @@ class CryptUtilSpek: Spek({
             val encoded = CryptUtil.init("123456789").enc( "111222333444")
 
             it("should transform data in a reversible way") {
-                CryptUtil.dec( encoded) `should equal to` "1112223334441"
+                CryptUtil.dec( encoded) `should equal to` "111222333444"
             }
         }
 
