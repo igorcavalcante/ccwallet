@@ -1,2 +1,3 @@
 # ccwallet
-A Multi-Credit Card Challenge
+Principais tecnologias utilzadas: Kotlin, Gradle, Ebean, Ktor, Spek
+
