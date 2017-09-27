@@ -238,11 +238,6 @@ object WalletSpek: Spek({
             it("should decrease the number of cards") {
                wallet.cards.size `should equal to` 2
             }
-
-            it("should delete the card from database") {
-                val count = Ebean.find(CreditCard::class.java).findCount()
-                count `should equal to` 2
-            }
         }
 
         on("removing a non existent card") {

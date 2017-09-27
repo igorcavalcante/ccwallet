@@ -20,10 +20,10 @@ buildscript {
 
 apply plugin: 'kotlin'
 apply plugin: 'org.junit.platform.gradle.plugin'
+apply plugin: 'kotlin-kapt'
 apply plugin: 'ebean'
 apply plugin: 'application'
 
-mainClassName = 'org.jetbrains.ktor.netty.DevelopmentHost'
 
 sourceCompatibility = 1.8
 
@@ -50,6 +50,19 @@ kotlin {
     }
 }
 
+sourceSets {
+    main.kotlin.srcDirs += 'src/main/kotlin'
+    main.kotlin.srcDirs += [file("$buildDir/generated/source/kapt/main")]
+    main.java.srcDirs += [file("$buildDir/generated/source/kapt/main")]
+    test {
+        kotlin {
+            srcDir "test/main/kotlin"
+        }
+    }
+}
+
+mainClassName = 'org.jetbrains.ktor.netty.DevelopmentHost'
+
 repositories {
     mavenCentral()
     maven { url "https://dl.bintray.com/kotlin/kotlinx" }
@@ -64,9 +77,9 @@ ebean {
     debugLevel = 2
 }
 
-sourceSets {
+/*sourceSets {
     main.java.srcDirs += [file("$buildDir/generated/source/kapt/main")]
-}
+}*/
 
 dependencies {
     compile "io.ebean:ebean:10.4.1"
@@ -105,4 +118,10 @@ kapt {
 
 ebean {
     debugLevel = 1 //1 - 9
+        debugLevel = 9
+//    packages = ["br.eti.cavalcante.ccwallet.model"]
+    queryBeans = false
+    kotlin = true
 }
+
+defaultTasks 'run'

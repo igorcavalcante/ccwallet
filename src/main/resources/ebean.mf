@@ -1,3 +1,5 @@
-entity-packages: br.eti.cavalcante.ccwallet.domain
-querybean-packages: br.eti.cavalcante.ccwallet.domain
+entity-packages: br.eti.cavalcante.ccwallet.model
+querybean-packages: br.eti.cavalcante.ccwallet.model
 transactional-packages: br.eti.cavalcante.ccwallet
+
+
